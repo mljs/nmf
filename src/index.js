@@ -28,25 +28,23 @@ function nmf(V,options){
     let gradW = Matrix.sub(W.mmul(H.mmul(H.transpose())), V.mmul(H.transpose()));
     let gradH = Matrix.sub(W.transpose().mmul(W).mmul(H), W.transpose().mmul(V));
 
-    let initgrad = norm2(gradW, gradH.transpose(), 'H');
-    
-    initgrad = norm2(initgrad);
+    let initgrad = norm2(gradW.to1DArray().concat(gradH.transpose().to1DArray()));
     let tolW = Math.max(0.001, tol)*initgrad;
     let tolH = tolW;
 
-    for(var i = 1; i < maxIter; i++){
-        let projnorm = norm2(concatMatrix(selectElementsFromMatrix(gradW, logical_or_matrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))), selectElementsFromMatrix(gradH, logical_or_matrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
+    for(let i = 1; i < maxIter; i++){
+        let projnorm = norm2(selectElementsFromMatrix(gradW, logical_or_matrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))).concat(selectElementsFromMatrix(gradH, logical_or_matrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
         if(projnorm < tol*initgrad){
             break;
         }
-        tmp = nlssubprob(V.transpose(),H.transpose(),W.transpose(),tolW,1000)
+        tmp = nlssubprob(V.transpose(),H.transpose(),W.transpose(),tolW,1000);
         W = tmp.M;
         gradW = tmp.grad;
         iterW = tmp.iter;
 
         W = W.transpose();
         gradW = gradW.transpose();
-    
+
         if (iterW === 1){
             tolW = 0.1 * tolW
         }
@@ -67,14 +65,14 @@ function nlssubprob(V, W, Hinit, tol, maxIter){
     let H = Hinit;
     let WtV = W.transpose().mmul(V);
     let WtW = W.transpose().mmul(W);
-    let grad = 0;
+    let grad;
     let alpha = 1;
     let beta = 0.1;
     let decrAlpha;
     let Hp;
     let numberIterations;
-
-    for (let iter = 0; iter < maxIter; iter++) {
+    maxIter = 2;
+    for (let iter = 1; iter < maxIter; iter++) {
         numberIterations = iter;
         grad = Matrix.sub(WtW.mmul(H), WtV);
         //let projgrad = norm2(selectElementsFromMatrix(grad, logical_or_matrix(elementsMatrixInferiorZero(grad), elementsMatrixSuperiorZero(H))));
@@ -88,27 +86,27 @@ function nlssubprob(V, W, Hinit, tol, maxIter){
             if (innerIter === 1) {
                 decrAlpha = !suffDecr;
                 Hp = H.clone();
-                if (decrAlpha) {
-                    if (suffDecr) {
-                        H = Hn.clone();
-                        break;
-                    } else {
-                        alpha = alpha * beta;
-                    }
+            }
+            if (decrAlpha) {
+                if (suffDecr) {
+                    H = Hn.clone();
+                    break;
                 } else {
-                    if (!suffDecr || matrixEqual(H, Hp)) {
-                        H = Hp.clone();
-                        break;
-                    } else {
-                        alpha = alpha / beta;
-                        Hp = H.clone();
-                    }
+                    alpha = alpha * beta;
+                }
+            } else {
+                if (!suffDecr || matrixEqual(H, Hp)) {
+                    H = Hp.clone();
+                    break;
+                } else {
+                    alpha = alpha / beta;
+                    Hp = H.clone();
                 }
             }
+        }
 
-            if (iter === maxIter) {
-                console.log('Max iterations in nlssubprob');
-            }
+        if (iter === maxIter) {
+            console.log('Max iterations in nlssubprob');
         }
     }
     return {M: H, grad: grad, iter: numberIterations};
@@ -117,16 +115,13 @@ function nlssubprob(V, W, Hinit, tol, maxIter){
 
 function norm2(A){
     let result = 0;
-    for(let i = 0; i < A.rows; i++){
-        for(let j = 0; j < A.columns; j++){
-            result = result + Math.abs(A.get(i,j))**2;
-        }
+    for(let i = 0; i < A.length; i++){
+        result = result + Math.abs(A[i])**2;
     }
     return Math.sqrt(result);
 }
 
-function concatMatrix(A, B, direction='H'){
-    let result = A;
+function concatMatrix(A, B, direction='V'){
     if(direction === 'H'){
         for(let i = 0; i < B.columns; i++){
             result = result.addColumnVector(B.getColumn(i));
@@ -188,7 +183,7 @@ function replaceElementsMatrix (X, arrayBooleans, value) {
     let newMatrix = new Matrix(X);
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < columns; c++) {
-            if (arrayBooleans[r][c]) {
+            if (!arrayBooleans[r][c]) {
                 newMatrix.set(r, c, value);
             }
         }

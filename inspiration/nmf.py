@@ -15,25 +15,26 @@ def nmf(V,Winit,Hinit,tol,timelimit,maxiter):
  tol: tolerance for a relative stopping condition
  timelimit, maxiter: limit of time and iterations
  """
-
+ maxiter = 2
  W = Winit; H = Hinit; initt = time();
 
  gradW = dot(W, dot(H, H.T)) - dot(V, H.T)
  gradH = dot(dot(W.T, W), H) - dot(W.T, V)
  initgrad = norm(r_[gradW, gradH.T])
- print 'Init gradient norm %f' % initgrad 
+ #print 'Init gradient norm %f' % initgrad 
  tolW = max(0.001,tol)*initgrad
  tolH = tolW
 
  for iter in xrange(1,maxiter):
   # stopping condition
   projnorm = norm(r_[gradW[logical_or(gradW<0, W>0)], gradH[logical_or(gradH<0, H>0)]])
+
   if projnorm < tol*initgrad or time() - initt > timelimit: break
   
   (W, gradW, iterW) = nlssubprob(V.T,H.T,W.T,tolW,1000)
   W = W.T
   gradW = gradW.T
-  
+
   if iterW==1: tolW = 0.1 * tolW
 
   (H,gradH,iterH) = nlssubprob(V,W,H,tolH,1000)
@@ -41,7 +42,7 @@ def nmf(V,Winit,Hinit,tol,timelimit,maxiter):
 
   if iter % 10 == 0: stdout.write('.')
 
- print '\nIter = %d Final proj-grad norm %f' % (iter, projnorm)
+ #print '\nIter = %d Final proj-grad norm %f' % (iter, projnorm)
  return (W,H)
 
 def nlssubprob(V,W,Hinit,tol,maxiter):
@@ -64,7 +65,7 @@ def nlssubprob(V,W,Hinit,tol,maxiter):
   #projgrad = norm(grad[logical_or(grad < 0, H >0)])
 
   # search step size 
-  for inner_iter in xrange(1,20):
+  for inner_iter in xrange(1,2):
    Hn = H - alpha*grad
    Hn = where(Hn > 0, Hn, 0)
    d = Hn-H
