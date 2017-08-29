@@ -13,3 +13,4 @@ v = dot(w1,h1)
 (wo,ho) = nmf(v, w2, h2, 0.001, 10, 10)
 print wo
 print ho
+print dot(wo, ho)

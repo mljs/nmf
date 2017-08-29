@@ -1,8 +1,8 @@
-const Matrix = require("ml-matrix");
+const {Matrix} = require("ml-matrix");
 
 module.exports = {
     nmf: nmf
-}
+};
 
 
 /**
@@ -16,27 +16,27 @@ function nmf(V,options){
     const n = V.rows;
     const m = V.columns;
     const {
-        K: 2,
-        Winit: Matrix.zeros(m, K),
-        Hinit: Matrix.zeros(K, n),
-        tol: 0.001,
-        maxIter: 100
+        K = 2,
+        Winit = Matrix.zeros(m, K),
+        Hinit = Matrix.zeros(K, n),
+        tol = 0.001,
+        maxIter = 100
     } = options;
 
-    var W = Winit;
-    var H = Hinit;
-    var gradW = W.mmul(H.mmul(H.transpose())) - V.mmul(H.transpose());
-    var gradH = W.transpose().mmul(W).mmul(H) - W.transpose().mmul(V);
-    
-    var initgrad = concatMatrix(gradW, gradH.transpose(), 'H');
+    let W = Winit;
+    let H = Hinit;
+    let gradW = Matrix.sub(W.mmul(H.mmul(H.transpose())), V.mmul(H.transpose()));
+    let gradH = Matrix.sub(W.transpose().mmul(W).mmul(H), W.transpose().mmul(V));
+
+    let initgrad = norm2(gradW, gradH.transpose(), 'H');
     
     initgrad = norm2(initgrad);
-    var tolW = max(0.001, tol)*initGrad;
-    var tolH = tolW;
+    let tolW = Math.max(0.001, tol)*initgrad;
+    let tolH = tolW;
 
-    for(var i; i < maxIter; i++){
-        var projnorm = norm2(concatMatrix(selectElementsFromMatrix(gradW, logical_or_matrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))), selectElementsFromMatrix(gradH, logical_or_matrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
-        if(projnrom < tol*initgrad){
+    for(var i = 1; i < maxIter; i++){
+        let projnorm = norm2(concatMatrix(selectElementsFromMatrix(gradW, logical_or_matrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))), selectElementsFromMatrix(gradH, logical_or_matrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
+        if(projnorm < tol*initgrad){
             break;
         }
         tmp = nlssubprob(V.transpose(),H.transpose(),W.transpose(),tolW,1000)
@@ -47,7 +47,7 @@ function nmf(V,options){
         W = W.transpose();
         gradW = gradW.transpose();
     
-        if (iterW==1){
+        if (iterW === 1){
             tolW = 0.1 * tolW
         }
     
@@ -55,67 +55,70 @@ function nmf(V,options){
         H = tmp.M;
         gradH = tmp.grad;
         iterH = tmp.iter;
-        if(iterH==1){
+        if(iterH === 1){
             tolH = 0.1 * tolH;
         }
     }
-    console.log('\nIter = '+iter);
+    //console.log('\nIter = '+i);
     return {W: W,H: H}
 }
 
 function nlssubprob(V, W, Hinit, tol, maxIter){
-    var H = Hinit
-    var WtV = W.transpose().mmul(V);
-    var WtW = W.transpose().mmul(W);
-    var grad = 0;
-    var alpha = 1;
-    var beta = 0.1;
-    var decrAlpha;
-    var Hp;
+    let H = Hinit;
+    let WtV = W.transpose().mmul(V);
+    let WtW = W.transpose().mmul(W);
+    let grad = 0;
+    let alpha = 1;
+    let beta = 0.1;
+    let decrAlpha;
+    let Hp;
+    let numberIterations;
 
-    for(var iter = 0; iter < maxIter; iter++) {
-        grad = WtW.mmul(H) - WtV;
-        projgrad = norm2(selectElementsFromMatrix(grad, logical_or_matrix(elementsMatrixInferiorZero(grad), elementsMatrixSuperiorZero(H))));
+    for (let iter = 0; iter < maxIter; iter++) {
+        numberIterations = iter;
+        grad = Matrix.sub(WtW.mmul(H), WtV);
+        //let projgrad = norm2(selectElementsFromMatrix(grad, logical_or_matrix(elementsMatrixInferiorZero(grad), elementsMatrixSuperiorZero(H))));
         for (let innerIter = 1; innerIter < 20; innerIter++) {
             let Hn = Matrix.sub(H, Matrix.mul(grad, alpha));
             Hn = replaceElementsMatrix(Hn, elementsMatrixSuperiorZero(Hn), 0);
             let d = Matrix.sub(Hn, H);
-            let gradd = sumElements(multiplyELementByElement(d, grad));
-            let dQd = sumElements(multiplyElementByElement(Matrix.mmul(WtW, d), d));
+            let gradd = sumElements(multiplyElementByElement(d, grad));
+            let dQd = sumElements(multiplyElementByElement(WtW.mmul(d), d));
             let suffDecr = 0.99 * gradd + 0.5 * dQd < 0;
             if (innerIter === 1) {
-                decrAlpha = ! suffrDecr;
+                decrAlpha = !suffDecr;
                 Hp = H.clone();
-            if (decrAlpha) {
-                if (suffDecr) {
-                    H = Hn.clone();
-                    break;
+                if (decrAlpha) {
+                    if (suffDecr) {
+                        H = Hn.clone();
+                        break;
+                    } else {
+                        alpha = alpha * beta;
+                    }
                 } else {
-                    alpha = alpha * beta;
-                }
-            } else {
-                if (! suffDecr || matrixEqual(H, Hp)) {
-                    H = Hp.clone();
-                    break;
-                } else {
-                    alpha = alpha / beta;
-                    Hp = H.clone();
+                    if (!suffDecr || matrixEqual(H, Hp)) {
+                        H = Hp.clone();
+                        break;
+                    } else {
+                        alpha = alpha / beta;
+                        Hp = H.clone();
+                    }
                 }
             }
-        }
-        
-        if (iter === maxiter) {
-            console.log('Max iterations in nlssubprob');
+
+            if (iter === maxIter) {
+                console.log('Max iterations in nlssubprob');
+            }
         }
     }
-    return {M: H, grad: grad, iter: iter};
+    return {M: H, grad: grad, iter: numberIterations};
 }
 
 
 function norm2(A){
-    var result = 0;
-    for(var i = 0; i < A.rows; i++){
-        for(var j = 0; j < A.columns; j++){
+    let result = 0;
+    for(let i = 0; i < A.rows; i++){
+        for(let j = 0; j < A.columns; j++){
             result = result + Math.abs(A.get(i,j))**2;
         }
     }
@@ -123,14 +126,14 @@ function norm2(A){
 }
 
 function concatMatrix(A, B, direction='H'){
-    var result = A;
-    if(direction == 'H'){
-        for(var i = 0; i < B.columns; i++){
+    let result = A;
+    if(direction === 'H'){
+        for(let i = 0; i < B.columns; i++){
             result = result.addColumnVector(B.getColumn(i));
         }
     }
     else{
-        for(var i = 0; i < B.rows; i++){
+        for(let i = 0; i < B.rows; i++){
             result = result.addRowVector(B.getRow(i));
         }
     }
@@ -141,8 +144,8 @@ function elementsMatrixSuperiorZero (X) {
     let newArray = new Array(X.rows);
     for (let i = 0; i < newArray.length; i++) {
         newArray[i] = new Array(X.columns);
-        for (let j = 0; j < m1[0].length; j++) {
-            newArray[i][j] = X.getValue(i, j) > 0;
+        for (let j = 0; j < X.columns; j++) {
+            newArray[i][j] = X.get(i, j) > 0;
         }
     }
     return newArray;
@@ -152,25 +155,24 @@ function elementsMatrixInferiorZero (X) {
     let newArray = new Array(X.rows);
     for (let i = 0; i < newArray.length; i++) {
         newArray[i] = new Array(X.columns);
-        for (let j = 0; j < m1[0].length; j++) {
-            newArray[i][j] = X.getValue(i, j) < 0;
+        for (let j = 0; j < X.columns; j++) {
+            newArray[i][j] = X.get(i, j) < 0;
         }
     }
     return newArray;
 }
 
 function selectElementsFromMatrix (X, arrayBooleans) {
-    if (m1.rows !== arrayBooleans.length || m1.columns !== arrayBooleans[0].length) {
+    if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
         console.log('Error of dimension');
     } 
     let newArray = [];
-    let rows = m1.rows;
-    let columns = m1.columns;
-    let newMatrix = new Matrix(X);
+    let rows = X.rows;
+    let columns = X.columns;
     for (let r = 0; r < rows; r++) {
-        for (let c; c < columns; c++) {
+        for (let c = 0; c < columns; c++) {
             if (arrayBooleans[r][c]) {
-                newArray.push(X.getValue(r, c));
+                newArray.push(X.get(r, c));
             }
         }
     }
@@ -178,16 +180,16 @@ function selectElementsFromMatrix (X, arrayBooleans) {
 } 
 
 function replaceElementsMatrix (X, arrayBooleans, value) {
-    if (m1.rows !== arrayBooleans.length || m1.columns !== arrayBooleans[0].length) {
+    if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
         console.log('Error of dimension');
     } 
-    let rows = m1.rows;
-    let columns = m1.columns;
+    let rows = X.rows;
+    let columns = X.columns;
     let newMatrix = new Matrix(X);
     for (let r = 0; r < rows; r++) {
-        for (let c; c < columns; c++) {
+        for (let c = 0; c < columns; c++) {
             if (arrayBooleans[r][c]) {
-                newMatrix.setValue(r, c, value);
+                newMatrix.set(r, c, value);
             }
         }
     }
@@ -209,17 +211,28 @@ function logical_or_matrix(m1, m2) {
 }
 
 function sumElements (X) {
-    return Math.sum(X.data);
+    let rows = X.rows;
+    let columns = X.columns;
+    let result = 0;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            result = result + X.get(r, c);
+        }
+    }
+    return result;
 }
 
-function multiplyELementByElement (m1, m2) {
+function multiplyElementByElement (m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
         console.log('Error of dimension');
     }
-    let newMatrix = Matrix.zeros(m1.rows, m1.columns);
-    let dimension = m1.data.length;
-    for (let i = 0; i < dimension; i++) {
-        newMatrix.data[i] = m1.data[i] * m2.data[i];
+    let rows = m1.rows;
+    let columns = m1.columns;
+    let newMatrix = Matrix.zeros(rows, columns);
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            newMatrix.set(r, c, m1.get(r,c)*m2.get(r,c));
+        }
     }
     return newMatrix;
 }
@@ -228,10 +241,13 @@ function matrixEqual (m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
         console.log('Error of dimension');
     }
-    let dimension = m1.data.length;
-    for (let i = 0; i < dimension; i++) {
-        if (m1.data[i] !== m2.data[i]) {
-            return false;
+    let rows = m1.rows;
+    let columns = m1.columns;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < columns; c++) {
+            if (m1.get(r, c) !== m2.get(r, c)) {
+                return false;
+            }
         }
     }
     return true;

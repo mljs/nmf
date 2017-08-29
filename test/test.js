@@ -1,12 +1,12 @@
 const NMF = require('../src');
-const Matrix = require("ml-matrix");
+const {Matrix} = require("ml-matrix");
 
-var w = Matrix([[1,2,3],[4,5,6]]);
-var h = Matrxi([[1,2],[3,4],[5,6]]);
-var w2 = Matrix([[1,1,3],[4,5,6]]);
-var h2 = Matrix([[1,1],[3,4],[5,6]]);
+let w = new Matrix([[1,2,3],[4,5,6]]);
+let h = new Matrix([[1,2],[3,4],[5,6]]);
+let w2 = new Matrix([[1,1,3],[4,5,6]]);
+let h2 = new Matrix([[1,1],[3,4],[5,6]]);
 
-var v = w.mmul(h);
+let v = w.mmul(h);
 
 const options = {
   Winit: w2, 
@@ -18,5 +18,7 @@ const options = {
 tmp = NMF.nmf(v, options);
 w0 = tmp.W;
 h0 = tmp.H;
-console.log(w0);
-console.log(h1);
+console.log('W :', w0);
+console.log('H :', h0);
+console.log('W*H :', w0.mmul(h0));
+console.log('expected :', v);

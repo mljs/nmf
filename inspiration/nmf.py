@@ -61,7 +61,7 @@ def nlssubprob(V,W,Hinit,tol,maxiter):
  alpha = 1; beta = 0.1;
  for iter in xrange(1, maxiter):  
   grad = dot(WtW, H) - WtV
-  projgrad = norm(grad[logical_or(grad < 0, H >0)])
+  #projgrad = norm(grad[logical_or(grad < 0, H >0)])
 
   # search step size 
   for inner_iter in xrange(1,20):
