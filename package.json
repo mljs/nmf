@@ -2,13 +2,28 @@
   "name": "nmf",
   "version": "1.0.0",
   "description": "NMF implementation in JS",
-  "main": "index.js",
+  "main": "src/index.js",
+  "files": [
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/image-js/nmf"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "eslint": "eslint src",
+    "eslint-fix": "npm run eslint -- --fix",
+    "test": "run-s testonly eslint",
+    "testonly": "jest"
+  },
+  "devDependencies": {
+    "eslint": "^4.1.1",
+    "eslint-config-cheminfo": "^1.6.0",
+    "eslint-plugin-no-only-tests": "^2.0.0",
+    "ml-matrix": "^5.0.1",
+    "jest": "^20.0.4",
+    "npm-run-all": "^4.0.2"
   },
   "author": "jajoe",
-  "license": "MIT",
-  "dependencies": {
-    "ml-matrix": "^5.0.1"
-  }
+  "license": "MIT"
 }

@@ -1,4 +1,6 @@
-const {Matrix} = require("ml-matrix");
+'use strict';
+
+const {Matrix} = require('ml-matrix');
 
 module.exports = {
     nmf: nmf
@@ -12,7 +14,7 @@ module.exports = {
  * @return {Object} WH - object with the format {W: ..., H: ...}. W and H are the results (i.e A ~= W.H)
  */
 
-function nmf(V,options){
+function nmf(V, options) {
     const n = V.rows;
     const m = V.columns;
     const {
@@ -29,39 +31,39 @@ function nmf(V,options){
     let gradH = Matrix.sub(W.transpose().mmul(W).mmul(H), W.transpose().mmul(V));
 
     let initgrad = norm2(gradW.to1DArray().concat(gradH.transpose().to1DArray()));
-    let tolW = Math.max(0.001, tol)*initgrad;
+    let tolW = Math.max(0.001, tol) * initgrad;
     let tolH = tolW;
 
-    for(let i = 1; i < maxIter; i++){
-        let projnorm = norm2(selectElementsFromMatrix(gradW, logical_or_matrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))).concat(selectElementsFromMatrix(gradH, logical_or_matrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
-        if(projnorm < tol*initgrad){
+    for (let i = 1; i < maxIter; i++) {
+        let projnorm = norm2(selectElementsFromMatrix(gradW, logicalOrMatrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))).concat(selectElementsFromMatrix(gradH, logicalOrMatrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
+        if (projnorm < tol * initgrad) {
             break;
         }
-        tmp = nlssubprob(V.transpose(),H.transpose(),W.transpose(),tolW,1000);
+        let tmp = nlssubprob(V.transpose(), H.transpose(), W.transpose(), tolW, 1000);
         W = tmp.M;
         gradW = tmp.grad;
-        iterW = tmp.iter;
+        let iterW = tmp.iter;
 
         W = W.transpose();
         gradW = gradW.transpose();
 
-        if (iterW === 1){
-            tolW = 0.1 * tolW
+        if (iterW === 1) {
+            tolW = 0.1 * tolW;
         }
-    
-        tmp = nlssubprob(V,W,H,tolH,1000);
+
+        tmp = nlssubprob(V, W, H, tolH, 1000);
         H = tmp.M;
         gradH = tmp.grad;
-        iterH = tmp.iter;
-        if(iterH === 1){
+        let iterH = tmp.iter;
+        if (iterH === 1) {
             tolH = 0.1 * tolH;
         }
     }
     //console.log('\nIter = '+i);
-    return {W: W,H: H}
+    return {W: W, H: H};
 }
 
-function nlssubprob(V, W, Hinit, tol, maxIter){
+function nlssubprob(V, W, Hinit, tol, maxIter) {
     let H = Hinit;
     let WtV = W.transpose().mmul(V);
     let WtW = W.transpose().mmul(W);
@@ -75,7 +77,7 @@ function nlssubprob(V, W, Hinit, tol, maxIter){
     for (let iter = 1; iter < maxIter; iter++) {
         numberIterations = iter;
         grad = Matrix.sub(WtW.mmul(H), WtV);
-        //let projgrad = norm2(selectElementsFromMatrix(grad, logical_or_matrix(elementsMatrixInferiorZero(grad), elementsMatrixSuperiorZero(H))));
+        //let projgrad = norm2(selectElementsFromMatrix(grad, logicalOrMatrix(elementsMatrixInferiorZero(grad), elementsMatrixSuperiorZero(H))));
         for (let innerIter = 1; innerIter < 20; innerIter++) {
             let Hn = Matrix.sub(H, Matrix.mul(grad, alpha));
             Hn = replaceElementsMatrix(Hn, elementsMatrixSuperiorZero(Hn), 0);
@@ -113,29 +115,15 @@ function nlssubprob(V, W, Hinit, tol, maxIter){
 }
 
 
-function norm2(A){
+function norm2(A) {
     let result = 0;
-    for(let i = 0; i < A.length; i++){
-        result = result + Math.abs(A[i])**2;
+    for (let i = 0; i < A.length; i++) {
+        result = result + Math.abs(A[i]) ** 2;
     }
     return Math.sqrt(result);
 }
 
-function concatMatrix(A, B, direction='V'){
-    if(direction === 'H'){
-        for(let i = 0; i < B.columns; i++){
-            result = result.addColumnVector(B.getColumn(i));
-        }
-    }
-    else{
-        for(let i = 0; i < B.rows; i++){
-            result = result.addRowVector(B.getRow(i));
-        }
-    }
-    return result;
-}
-
-function elementsMatrixSuperiorZero (X) {
+function elementsMatrixSuperiorZero(X) {
     let newArray = new Array(X.rows);
     for (let i = 0; i < newArray.length; i++) {
         newArray[i] = new Array(X.columns);
@@ -146,7 +134,7 @@ function elementsMatrixSuperiorZero (X) {
     return newArray;
 }
 
-function elementsMatrixInferiorZero (X) {
+function elementsMatrixInferiorZero(X) {
     let newArray = new Array(X.rows);
     for (let i = 0; i < newArray.length; i++) {
         newArray[i] = new Array(X.columns);
@@ -157,10 +145,10 @@ function elementsMatrixInferiorZero (X) {
     return newArray;
 }
 
-function selectElementsFromMatrix (X, arrayBooleans) {
+function selectElementsFromMatrix(X, arrayBooleans) {
     if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
         console.log('Error of dimension');
-    } 
+    }
     let newArray = [];
     let rows = X.rows;
     let columns = X.columns;
@@ -172,12 +160,12 @@ function selectElementsFromMatrix (X, arrayBooleans) {
         }
     }
     return newArray;
-} 
+}
 
-function replaceElementsMatrix (X, arrayBooleans, value) {
+function replaceElementsMatrix(X, arrayBooleans, value) {
     if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
         console.log('Error of dimension');
-    } 
+    }
     let rows = X.rows;
     let columns = X.columns;
     let newMatrix = new Matrix(X);
@@ -189,9 +177,9 @@ function replaceElementsMatrix (X, arrayBooleans, value) {
         }
     }
     return newMatrix;
-} 
+}
 
-function logical_or_matrix(m1, m2) {
+function logicalOrMatrix(m1, m2) {
     if (m1.length !== m2.length || m1[0].length !== m2[0].length) {
         console.log('Error of dimension');
     }
@@ -205,7 +193,7 @@ function logical_or_matrix(m1, m2) {
     return newArray;
 }
 
-function sumElements (X) {
+function sumElements(X) {
     let rows = X.rows;
     let columns = X.columns;
     let result = 0;
@@ -217,7 +205,7 @@ function sumElements (X) {
     return result;
 }
 
-function multiplyElementByElement (m1, m2) {
+function multiplyElementByElement(m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
         console.log('Error of dimension');
     }
@@ -226,13 +214,13 @@ function multiplyElementByElement (m1, m2) {
     let newMatrix = Matrix.zeros(rows, columns);
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < columns; c++) {
-            newMatrix.set(r, c, m1.get(r,c)*m2.get(r,c));
+            newMatrix.set(r, c, m1.get(r, c) * m2.get(r, c));
         }
     }
     return newMatrix;
 }
 
-function matrixEqual (m1, m2) {
+function matrixEqual(m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
         console.log('Error of dimension');
     }

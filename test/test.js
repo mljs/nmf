@@ -18,7 +18,7 @@ const options = {
 tmp = NMF.nmf(v, options);
 w0 = tmp.W;
 h0 = tmp.H;
-console.log('W :', w0);
-console.log('H :', h0);
+console.log('W computed :', w0);
+console.log('H computed :', h0);
 console.log('W*H :', w0.mmul(h0));
 console.log('expected :', v);
