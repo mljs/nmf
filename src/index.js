@@ -35,7 +35,7 @@ function nmf(V,options){
   var tolH = tolW;
 
   for(var i; i < maxIter; i++){
-    var projnorm = norm2(concatMatrix(gradW[logical_or(gradW.min() < 0, W.min() > 0)], gradH[logical_or(gradH.min() < 0, H.min() > 0)]));
+    var projnorm = norm2(concatMatrix(selectElementsFromMatrix(gradW, logical_or_matrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))), selectElementsFromMatrix(gradH, logical_or_matrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
     if(projnrom < tol*initgrad){
       break;
     }
@@ -70,13 +70,45 @@ function nlssubprob(V, W, Hinit, tol, maxIter){
   var grad = 0;
   var alpha = 1;
   var beta = 0.1;
+  var decrAlpha;
+  var Hp;
 
-  for(var i = 0; i < maxIter; i++){
+  for(var iter = 0; iter < maxIter; iter++) {
     grad = WtW.mmul(H) - WtV;
-   // To complete !
+    projgrad = norm2(selectElementsFromMatrix(grad, logical_or_matrix(elementsMatrixInferiorZero(grad), elementsMatrixSuperiorZero(H))));
+    for (let innerIter = 1; innerIter < 20; innerIter++) {
+      let Hn = Matrix.sub(H, Matrix.mul(grad, alpha));
+      Hn = replaceElementsMatrix(Hn, elementsMatrixSuperiorZero(Hn), 0);
+      let d = Matrix.sub(Hn, H);
+      let gradd = sumElements(multiplyELementByElement(d, grad));
+      let dQd = sumElements(multiplyElementByElement(Matrix.mmul(WtW, d), d));
+      let suffDecr = 0.99 * gradd + 0.5 * dQd < 0;
+      if (innerIter === 1) {
+        decrAlpha = ! suffrDecr;
+        Hp = H.clone();
+      if (decrAlpha) {
+        if (suffDecr) {
+          H = Hn.clone();
+          break;
+        } else {
+          alpha = alpha * beta;
+        }
+      } else {
+        if (! suffDecr || matrixEqual(H, Hp)) {
+          H = Hp.clone();
+          break;
+        } else {
+          alpha = alpha / beta;
+          Hp = H.clone();
+        }
+      }
+    }
+    
+    if (iter === maxiter) {
+      console.log('Max iterations in nlssubprob');
+    }
   }
-
-  return {M: H, grad: grad, iter: i};
+  return {M: H, grad: grad, iter: iter};
 }
 
 
@@ -105,8 +137,34 @@ function concatMatrix(A, B, direction='H'){
   return result;
 }
 
+function elementsMatrixSuperiorZero (X) {
 
-function logical_or(c1, c2){
-  return (c1 || c2) ? 1 : 0;
 }
 
+function elementsMatrixInferiorZero (X) {
+
+}
+
+function selectElementsFromMatrix (X, arrayBooleans) {
+    
+} 
+
+function replaceElementsMatrix (X, arrayBooleans, value) {
+    
+} 
+
+function logical_or_matrix(m1, m2) {
+
+}
+
+function sumElements (X) {
+
+}
+
+function multiplyELementByElement (m1, m2) {
+
+}
+
+function matrixEqual (m1, m2) {
+
+}
