@@ -107,9 +107,9 @@ function nlssubprob(V, W, Hinit, tol, maxIter) {
             }
         }
 
-        if (iter === maxIter) {
+        /*if (iter === maxIter) {
             console.log('Max iterations in nlssubprob');
-        }
+        }*/
     }
     return {M: H, grad: grad, iter: numberIterations};
 }
@@ -147,7 +147,7 @@ function elementsMatrixInferiorZero(X) {
 
 function selectElementsFromMatrix(X, arrayBooleans) {
     if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let newArray = [];
     let rows = X.rows;
@@ -164,7 +164,7 @@ function selectElementsFromMatrix(X, arrayBooleans) {
 
 function replaceElementsMatrix(X, arrayBooleans, value) {
     if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let rows = X.rows;
     let columns = X.columns;
@@ -181,7 +181,7 @@ function replaceElementsMatrix(X, arrayBooleans, value) {
 
 function logicalOrMatrix(m1, m2) {
     if (m1.length !== m2.length || m1[0].length !== m2[0].length) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let newArray = new Array(m1.length);
     for (let i = 0; i < newArray.length; i++) {
@@ -207,7 +207,7 @@ function sumElements(X) {
 
 function multiplyElementByElement(m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let rows = m1.rows;
     let columns = m1.columns;
@@ -222,7 +222,7 @@ function multiplyElementByElement(m1, m2) {
 
 function matrixEqual(m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let rows = m1.rows;
     let columns = m1.columns;
