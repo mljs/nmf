@@ -63,6 +63,17 @@ function nmf(V, options) {
     return {W: W, H: H};
 }
 
+/**
+ * @private
+ * Solve the subproblem by the projected gradient algorithm
+ * @param {Matrix} V
+ * @param {Matrix} W
+ * @param {Matrix} Hinit
+ * @param {number} tol (between 0 and 1)
+ * @param {number} maxIter 
+ * @return {object} return value has the format {W: , H: }
+ */
+
 function nlssubprob(V, W, Hinit, tol, maxIter) {
     let H = Hinit;
     let WtV = W.transpose().mmul(V);
@@ -107,13 +118,19 @@ function nlssubprob(V, W, Hinit, tol, maxIter) {
             }
         }
 
-        if (iter === maxIter) {
+        /*if (iter === maxIter) {
             console.log('Max iterations in nlssubprob');
-        }
+        }*/
     }
     return {M: H, grad: grad, iter: numberIterations};
 }
 
+/**
+ * @private
+ * Return the frobenius norm of an array
+ * @param {Array<number>} A 
+ * @return {number} the frobenius norm
+ */
 
 function norm2(A) {
     let result = 0;
@@ -122,6 +139,13 @@ function norm2(A) {
     }
     return Math.sqrt(result);
 }
+
+/**
+ * @private
+ * Return a 1D-Array with the elements of the matrix X which are superior than 0
+ * @param {Matrix} X 
+ * @return {Array<number>} elements superior than 0
+ */
 
 function elementsMatrixSuperiorZero(X) {
     let newArray = new Array(X.rows);
@@ -134,6 +158,13 @@ function elementsMatrixSuperiorZero(X) {
     return newArray;
 }
 
+/**
+ * @private
+ * Return a 1D-Array with the elements of the matrix X which are inferior than 0
+ * @param {Matrix} X 
+ * @return {Array<number>} elements inferior than 0
+ */
+
 function elementsMatrixInferiorZero(X) {
     let newArray = new Array(X.rows);
     for (let i = 0; i < newArray.length; i++) {
@@ -145,9 +176,17 @@ function elementsMatrixInferiorZero(X) {
     return newArray;
 }
 
+/**
+ * @private
+ * Take a matrix and a 2D-array of booleans (same dimensions than the matrix) and return the elements of the matrix which corresponds to a value true in the 2D-array of booleans.
+ * @param {Matrix} X 
+ * @param {Array<Array<boolean>>} arrayBooleans 
+ * @return {Array<number>} elements selected
+ */
+
 function selectElementsFromMatrix(X, arrayBooleans) {
     if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let newArray = [];
     let rows = X.rows;
@@ -162,9 +201,18 @@ function selectElementsFromMatrix(X, arrayBooleans) {
     return newArray;
 }
 
+/**
+ * @private
+ * Take a matrix, a 2D-array of booleans (same dimensions than the matrix) and a value. Replace the elements of the matrix which corresponds to a value true in the 2D-array of booleans by the value given into parameter. Return a matrix.
+ * @param {Matrix} X 
+ * @param {Array<Array<boolean>>} arrayBooleans 
+ * @param {number} value
+ * @return {Matrix} Matrix which the replaced elements.
+ */
+
 function replaceElementsMatrix(X, arrayBooleans, value) {
     if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let rows = X.rows;
     let columns = X.columns;
@@ -179,9 +227,17 @@ function replaceElementsMatrix(X, arrayBooleans, value) {
     return newMatrix;
 }
 
+/**
+ * @private
+ * Take 2 2D-array of booleans (same dimensions) and return another 2D-Array with the result or the OR operator (each element of the result is the result of the OR operation of the corresponding elements in the 2 arrays given into parameters).
+ * @param {Array<Array<boolean>>} m1 
+ * @param {Array<Array<boolean>>} m2 
+ * @return {Array<Array<boolean>>} 2D-Array with the result of the OR operations.
+ */
+
 function logicalOrMatrix(m1, m2) {
     if (m1.length !== m2.length || m1[0].length !== m2[0].length) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let newArray = new Array(m1.length);
     for (let i = 0; i < newArray.length; i++) {
@@ -192,6 +248,13 @@ function logicalOrMatrix(m1, m2) {
     }
     return newArray;
 }
+
+/**
+ * @private
+ * Return the sum of every elements of the matrix
+ * @param {Matrix} X 
+ * @return {number} 
+ */
 
 function sumElements(X) {
     let rows = X.rows;
@@ -205,9 +268,17 @@ function sumElements(X) {
     return result;
 }
 
+/**
+ * @private
+ * Matrix multiplication element-wise.
+ * @param {Matrix} m1 
+ * @param {Matrix} m2 
+ * @return {Matrix} 
+ */
+
 function multiplyElementByElement(m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let rows = m1.rows;
     let columns = m1.columns;
@@ -220,9 +291,17 @@ function multiplyElementByElement(m1, m2) {
     return newMatrix;
 }
 
+/**
+ * @private
+ * Return if two matrix are equals (i.e each element is equal to the corresponding element of the other matrix).
+ * @param {Matrix} m1 
+ * @param {Matrix} m2 
+ * @return {boolean} 
+ */
+
 function matrixEqual(m1, m2) {
     if (m1.rows !== m2.rows || m1.columns !== m2.columns) {
-        console.log('Error of dimension');
+        throw new Error('Error of dimension');
     }
     let rows = m1.rows;
     let columns = m1.columns;
