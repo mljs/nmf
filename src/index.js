@@ -6,7 +6,6 @@ module.exports = {
     nmf: nmf
 };
 
-
 /**
  * Compute the NMF of a matrix V, i.e the matrix W and H => A ~= W.H
  * @param {Matrix} V - Matrix to factorize
@@ -27,19 +26,51 @@ function nmf(V, options) {
 
     let W = Winit;
     let H = Hinit;
-    let gradW = Matrix.sub(W.mmul(H.mmul(H.transpose())), V.mmul(H.transpose()));
-    let gradH = Matrix.sub(W.transpose().mmul(W).mmul(H), W.transpose().mmul(V));
+    let gradW = Matrix.sub(
+        W.mmul(H.mmul(H.transpose())),
+        V.mmul(H.transpose())
+    );
+    let gradH = Matrix.sub(
+        W.transpose()
+            .mmul(W)
+            .mmul(H),
+        W.transpose().mmul(V)
+    );
 
-    let initgrad = norm2(gradW.to1DArray().concat(gradH.transpose().to1DArray()));
+    let initgrad = norm2(
+        gradW.to1DArray().concat(gradH.transpose().to1DArray())
+    );
     let tolW = Math.max(0.001, tol) * initgrad;
     let tolH = tolW;
 
     for (let i = 1; i < maxIter; i++) {
-        let projnorm = norm2(selectElementsFromMatrix(gradW, logicalOrMatrix(elementsMatrixInferiorZero(gradW), elementsMatrixSuperiorZero(W))).concat(selectElementsFromMatrix(gradH, logicalOrMatrix(elementsMatrixInferiorZero(gradH), elementsMatrixSuperiorZero(H)))));
+        let projnorm = norm2(
+            selectElementsFromMatrix(
+                gradW,
+                logicalOrMatrix(
+                    elementsMatrixInferiorZero(gradW),
+                    elementsMatrixSuperiorZero(W)
+                )
+            ).concat(
+                selectElementsFromMatrix(
+                    gradH,
+                    logicalOrMatrix(
+                        elementsMatrixInferiorZero(gradH),
+                        elementsMatrixSuperiorZero(H)
+                    )
+                )
+            )
+        );
         if (projnorm < tol * initgrad) {
             break;
         }
-        let tmp = nlssubprob(V.transpose(), H.transpose(), W.transpose(), tolW, 1000);
+        let tmp = nlssubprob(
+            V.transpose(),
+            H.transpose(),
+            W.transpose(),
+            tolW,
+            1000
+        );
         W = tmp.M;
         gradW = tmp.grad;
         let iterW = tmp.iter;
@@ -70,7 +101,7 @@ function nmf(V, options) {
  * @param {Matrix} W
  * @param {Matrix} Hinit
  * @param {number} tol (between 0 and 1)
- * @param {number} maxIter 
+ * @param {number} maxIter
  * @return {object} return value has the format {W: , H: }
  */
 
@@ -128,7 +159,7 @@ function nlssubprob(V, W, Hinit, tol, maxIter) {
 /**
  * @private
  * Return the frobenius norm of an array
- * @param {Array<number>} A 
+ * @param {Array<number>} A
  * @return {number} the frobenius norm
  */
 
@@ -143,7 +174,7 @@ function norm2(A) {
 /**
  * @private
  * Return a 1D-Array with the elements of the matrix X which are superior than 0
- * @param {Matrix} X 
+ * @param {Matrix} X
  * @return {Array<number>} elements superior than 0
  */
 
@@ -161,7 +192,7 @@ function elementsMatrixSuperiorZero(X) {
 /**
  * @private
  * Return a 1D-Array with the elements of the matrix X which are inferior than 0
- * @param {Matrix} X 
+ * @param {Matrix} X
  * @return {Array<number>} elements inferior than 0
  */
 
@@ -179,13 +210,16 @@ function elementsMatrixInferiorZero(X) {
 /**
  * @private
  * Take a matrix and a 2D-array of booleans (same dimensions than the matrix) and return the elements of the matrix which corresponds to a value true in the 2D-array of booleans.
- * @param {Matrix} X 
- * @param {Array<Array<boolean>>} arrayBooleans 
+ * @param {Matrix} X
+ * @param {Array<Array<boolean>>} arrayBooleans
  * @return {Array<number>} elements selected
  */
 
 function selectElementsFromMatrix(X, arrayBooleans) {
-    if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
+    if (
+        X.rows !== arrayBooleans.length ||
+        X.columns !== arrayBooleans[0].length
+    ) {
         throw new Error('Error of dimension');
     }
     let newArray = [];
@@ -204,14 +238,17 @@ function selectElementsFromMatrix(X, arrayBooleans) {
 /**
  * @private
  * Take a matrix, a 2D-array of booleans (same dimensions than the matrix) and a value. Replace the elements of the matrix which corresponds to a value true in the 2D-array of booleans by the value given into parameter. Return a matrix.
- * @param {Matrix} X 
- * @param {Array<Array<boolean>>} arrayBooleans 
+ * @param {Matrix} X
+ * @param {Array<Array<boolean>>} arrayBooleans
  * @param {number} value
  * @return {Matrix} Matrix which the replaced elements.
  */
 
 function replaceElementsMatrix(X, arrayBooleans, value) {
-    if (X.rows !== arrayBooleans.length || X.columns !== arrayBooleans[0].length) {
+    if (
+        X.rows !== arrayBooleans.length ||
+        X.columns !== arrayBooleans[0].length
+    ) {
         throw new Error('Error of dimension');
     }
     let rows = X.rows;
@@ -230,8 +267,8 @@ function replaceElementsMatrix(X, arrayBooleans, value) {
 /**
  * @private
  * Take 2 2D-array of booleans (same dimensions) and return another 2D-Array with the result or the OR operator (each element of the result is the result of the OR operation of the corresponding elements in the 2 arrays given into parameters).
- * @param {Array<Array<boolean>>} m1 
- * @param {Array<Array<boolean>>} m2 
+ * @param {Array<Array<boolean>>} m1
+ * @param {Array<Array<boolean>>} m2
  * @return {Array<Array<boolean>>} 2D-Array with the result of the OR operations.
  */
 
@@ -252,8 +289,8 @@ function logicalOrMatrix(m1, m2) {
 /**
  * @private
  * Return the sum of every elements of the matrix
- * @param {Matrix} X 
- * @return {number} 
+ * @param {Matrix} X
+ * @return {number}
  */
 
 function sumElements(X) {
@@ -271,9 +308,9 @@ function sumElements(X) {
 /**
  * @private
  * Matrix multiplication element-wise.
- * @param {Matrix} m1 
- * @param {Matrix} m2 
- * @return {Matrix} 
+ * @param {Matrix} m1
+ * @param {Matrix} m2
+ * @return {Matrix}
  */
 
 function multiplyElementByElement(m1, m2) {
@@ -294,9 +331,9 @@ function multiplyElementByElement(m1, m2) {
 /**
  * @private
  * Return if two matrix are equals (i.e each element is equal to the corresponding element of the other matrix).
- * @param {Matrix} m1 
- * @param {Matrix} m2 
- * @return {boolean} 
+ * @param {Matrix} m1
+ * @param {Matrix} m2
+ * @return {boolean}
  */
 
 function matrixEqual(m1, m2) {
