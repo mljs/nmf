@@ -1,6 +1,6 @@
-const { Matrix } = require('ml-matrix');
-const { toBeDeepCloseTo } = require('jest-matcher-deep-close-to');
-const NMF = require('../src');
+import { Matrix } from 'ml-matrix';
+import { toBeDeepCloseTo } from 'jest-matcher-deep-close-to';
+import { nmf as NMF } from '../index';
 
 expect.extend({ toBeDeepCloseTo });
 
@@ -34,7 +34,7 @@ describe('NMF test', () => {
       maxIter: 10,
     };
 
-    const result = NMF.nmf(v, options);
+    const result = NMF(v, options);
     const w0 = result.W;
     const h0 = result.H;
     expect(w0.mmul(h0).to2DArray()).toBeDeepCloseTo(v.to2DArray(), 1);

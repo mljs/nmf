@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "nmf",
   "version": "1.0.0",
   "description": "NMF implementation in JS",
@@ -9,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/image-js/nmf"
+    "url": "https://github.com/mljs/nmf"
   },
   "scripts": {
     "eslint": "eslint src",
@@ -33,9 +34,9 @@
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.9.6",
     "@rollup/plugin-json": "^4.1.0",
+    "cheminfo-tools": "^1.23.3",
+    "jest-matcher-deep-close-to": "^2.0.1",
     "@types/jest": "^25.2.3",
-    "cheminfo-build": "^1.1.1",
-    "cheminfo-publish": "^1.0.10",
     "eslint": "^7.3.1",
     "eslint-config-cheminfo": "^3.0.0",
     "eslint-plugin-import": "^2.21.2",
@@ -48,7 +49,6 @@
   "author": "jajoe",
   "license": "MIT",
   "dependencies": {
-    "jest-matcher-deep-close-to": "^2.0.1",
-    "ml-matrix": "^6.1.2"
+    "ml-matrix": "^6.5.1"
   }
 }

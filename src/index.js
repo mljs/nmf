@@ -1,35 +1,23 @@
-const { Matrix } = require('ml-matrix');
-
-module.exports = {
-  nmf: nmf,
-};
+import { Matrix } from 'ml-matrix';
+import { initialisation } from './utils/initialisation';
 
 /**
- * Compute the NMF of a matrix V, i.e the matrix W and H => A ~= W.H
+ * Compute the NMF of a matrix V, i.e the matrix W and H => V ~= W.H
  * @param {Matrix} V - Matrix to factorize
- * @param {Object} options - options can include the parameters K (width of the Matrix W and height of the Matrix H), Winit (Init matrix of W), Hinit (Init matrix of H), tol (tolerance - default is 0.001) and maxIter (maximum of iterations before stopping - default is 100)
+ * @param {Object} options - options can include the parameters K (width of the Matrix W and height of the Matrix H), wInit (Init matrix of W), hInit (Init matrix of H), tol (tolerance - default is 0.001) and maxIter (maximum of iterations before stopping - default is 100)
  * @return {Object} WH - object with the format {W: ..., H: ...}. W and H are the results (i.e A ~= W.H)
  */
 
-function nmf(V, options) {
-  const n = V.rows;
-  const m = V.columns;
-  const {
-    K = 2,
-    Winit = Matrix.random(n, K),
-    Hinit = Matrix.random(K, m),
-    tol = 0.001,
-    maxIter = 100,
-  } = options;
-
-  let W = Winit;
-  let H = Hinit;
+export function nmf(V, options = {}) {
+  V = Matrix.checkMatrix(V);
+  const { tol = 0.001, maxIter = 100 } = options;
+  let { W, H, K } = initialisation(V, options);
   let WH = W.mmul(H);
   let gradW = Matrix.sub(WH, V).mmul(H.transpose());
   let gradH = W.transpose().mmul(Matrix.sub(WH, V));
 
   let initgrad = norm2(gradW.to1DArray().concat(gradH.transpose().to1DArray()));
-  let tolW = Math.max(0.001, tol) * initgrad;
+  let tolW = tol * initgrad;
   let tolH = tolW;
   let i;
   for (i = 1; i < maxIter; i++) {
@@ -50,20 +38,19 @@ function nmf(V, options) {
         ),
       ),
     );
-    // console.log('projnorm', projnorm);
+
     if (projnorm < tol * initgrad) {
-      console.log('it break');
       break;
     }
+
     let tmp = nlssubprob(
       V.transpose(),
       H.transpose(),
       W.transpose(),
       tolW,
-      100,
+      1000,
     );
     W = tmp.M;
-    // console.log(tmp.iter, W);
     gradW = tmp.grad;
     let iterW = tmp.iter;
 
@@ -74,7 +61,7 @@ function nmf(V, options) {
       tolW = 0.1 * tolW;
     }
 
-    tmp = nlssubprob(V, W, H, tolH, 100);
+    tmp = nlssubprob(V, W, H, tolH, 1000);
     H = tmp.M;
     gradH = tmp.grad;
     let iterH = tmp.iter;
@@ -82,7 +69,7 @@ function nmf(V, options) {
       tolH = 0.1 * tolH;
     }
   }
-  return { W: W, H: H };
+  return { W: W, H: H, K };
 }
 
 /**
@@ -90,14 +77,14 @@ function nmf(V, options) {
  * Solve the subproblem by the projected gradient algorithm
  * @param {Matrix} V
  * @param {Matrix} W
- * @param {Matrix} Hinit
+ * @param {Matrix} hInit
  * @param {number} tol (between 0 and 1)
  * @param {number} maxIter
  * @return {object} return value has the format {W: , H: }
  */
 
-function nlssubprob(V, W, Hinit, tol, maxIter) {
-  let H = Hinit;
+function nlssubprob(V, W, hInit, tol, maxIter) {
+  let H = hInit;
   let WtV = W.transpose().mmul(V);
   let WtW = W.transpose().mmul(W);
   let grad;
@@ -129,7 +116,6 @@ function nlssubprob(V, W, Hinit, tol, maxIter) {
       let gradd = sumElements(multiplyElementByElement(d, grad));
       let dQd = sumElements(multiplyElementByElement(WtW.mmul(d), d));
       let suffDecr = 0.99 * gradd + 0.5 * dQd <= 0; //condition 13 with sigma = 0.01
-
       if (innerIter === 1) {
         decrAlpha = !suffDecr;
         Hp = H.clone();
@@ -165,7 +151,7 @@ function nlssubprob(V, W, Hinit, tol, maxIter) {
 function norm2(A) {
   let result = 0;
   for (let i = 0; i < A.length; i++) {
-    result = result + Math.abs(A[i]) ** 2;
+    result += Math.abs(A[i]) ** 2;
   }
   return Math.sqrt(result);
 }
