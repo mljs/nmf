@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "name": "nmf",
   "version": "1.0.0",
   "description": "NMF implementation in JS",
@@ -33,16 +32,18 @@
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.9.6",
+    "@babel/preset-env": "^7.11.5",
     "@rollup/plugin-json": "^4.1.0",
-    "cheminfo-tools": "^1.23.3",
-    "jest-matcher-deep-close-to": "^2.0.1",
     "@types/jest": "^25.2.3",
+    "babel-jest": "^26.3.0",
+    "cheminfo-tools": "^1.23.3",
     "eslint": "^7.3.1",
     "eslint-config-cheminfo": "^3.0.0",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-jest": "^23.17.1",
     "eslint-plugin-prettier": "^3.1.4",
-    "jest": "^26.1.0",
+    "jest": "^26.4.2",
+    "jest-matcher-deep-close-to": "^2.0.1",
     "prettier": "^2.0.5",
     "rollup": "^2.18.1"
   },

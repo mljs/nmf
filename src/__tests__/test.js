@@ -28,8 +28,8 @@ describe('NMF test', () => {
     let v = w.mmul(h);
 
     const options = {
-      Winit: winit,
-      Hinit: hinit,
+      wInit: winit,
+      hInit: hinit,
       tol: 0.001,
       maxIter: 10,
     };
