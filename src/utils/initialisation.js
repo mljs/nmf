@@ -26,11 +26,11 @@ export function initialisation(V, options = {}) {
   if (wInit && hInit) {
     Matrix.checkMatrix(wInit);
     Matrix.checkMatrix(hInit);
-    if (wInit.columns !== k || wInit.rows !== n) {
-      throw new Error(`guess W matrix does not match rows ${n} columns ${k}`);
+    if (wInit.rows !== n) {
+      throw new Error(`guess W matrix does not match rows ${n}`);
     }
-    if (hInit.columns !== m || hInit.rows !== k) {
-      throw new Error(`guess H matrix does not match rows ${k} columns ${m}`);
+    if (hInit.columns !== m) {
+      throw new Error(`guess H matrix does not match columns ${m}`);
     }
     return { W: wInit, H: hInit };
   } else if (svdInitialisation === true) {
@@ -41,7 +41,7 @@ export function initialisation(V, options = {}) {
     };
     let W = Matrix.rand(V.rows, k, { random });
     let H = Matrix.rand(k, V.columns, { random });
-    return { W, H };
+    return { W, H, k };
   }
 }
 
